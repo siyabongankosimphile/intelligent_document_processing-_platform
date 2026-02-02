@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart PDF Filler - Excel to PDF Converter</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1><i class="fas fa-file-contract"></i> Smart PDF Filler</h1>
+            <p class="subtitle">Upload ANY Excel file and PDF template - Automatically extracts and fills data</p>
+        </header>
+
+        <main class="main-content">
+            <!-- Step 1: File Upload Section -->
+            <div class="upload-section">
+                <div class="card">
+                    <h2><i class="fas fa-upload"></i> Step 1: Upload Files</h2>
+                    
+                    <div class="upload-grid">
+                        <!-- Excel Upload -->
+                        <div class="upload-area" id="excelUploadArea">
+                            <div class="upload-icon">
+                                <i class="fas fa-file-excel"></i>
+                            </div>
+                            <h3>Excel/CSV Data File</h3>
+                            <p>Upload ANY Excel file (no specific format required)</p>
+                            <div class="drop-zone" id="excelDropZone">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                                <p>Drag & drop Excel file</p>
+                                <p class="small">or click to browse</p>
+                                <input type="file" id="excelFileInput" accept=".xlsx,.xls,.csv" hidden>
+                            </div>
+                            <div class="file-info" id="excelFileInfo"></div>
+                        </div>
+
+                        <!-- PDF Upload -->
+                        <div class="upload-area" id="pdfUploadArea">
+                            <div class="upload-icon">
+                                <i class="fas fa-file-pdf"></i>
+                            </div>
+                            <h3>PDF Template</h3>
+                            <p>Upload ANY PDF template (with or without form fields)</p>
+                            <div class="drop-zone" id="pdfDropZone">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                                <p>Drag & drop PDF template</p>
+                                <p class="small">or click to browse</p>
+                                <input type="file" id="pdfFileInput" accept=".pdf" hidden>
+                            </div>
+                            <div class="file-info" id="pdfFileInfo"></div>
+                        </div>
+                    </div>
+
+                    <!-- Debug Buttons -->
+                    <div class="debug-section" style="margin-top: 20px; text-align: center;">
+                        <button id="debugExcelBtn" class="btn btn-secondary btn-small">
+                            <i class="fas fa-bug"></i> Debug Excel Fields
+                        </button>
+                        <button id="debugPdfBtn" class="btn btn-secondary btn-small">
+                            <i class="fas fa-bug"></i> Debug PDF Fields
+                        </button>
+                    </div>
+
+                    <div class="upload-status" id="uploadStatus"></div>
+                </div>
+            </div>
+
+            <!-- Step 2: Records Selection -->
+            <div class="records-section" id="recordsSection" style="display: none;">
+                <div class="card">
+                    <h2><i class="fas fa-users"></i> Step 2: Select Record to Fill</h2>
+                    <p class="section-description">
+                        <span id="recordsCount">0</span> records loaded from Excel.
+                        Click on a record to preview and fill the PDF.
+                    </p>
+                    
+                    <div class="search-bar">
+                        <input type="text" id="searchInput" placeholder="Search by any field...">
+                        <i class="fas fa-search"></i>
+                    </div>
+
+                    <div class="records-container">
+                        <div class="records-grid" id="recordsGrid">
+                            <!-- Records will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 3: Preview & Generate -->
+            <div class="preview-section" id="previewSection" style="display: none;">
+                <div class="preview-grid">
+                    <!-- Data Preview -->
+                    <div class="card">
+                        <h2><i class="fas fa-user"></i> Selected Record Details</h2>
+                        <div class="selected-record-info" id="selectedRecordInfo">
+                            <div class="record-header">
+                                <div class="record-avatar">
+                                    <i class="fas fa-user-circle"></i>
+                                </div>
+                                <div class="record-title">
+                                    <h3 id="selectedRecordName">No record selected</h3>
+                                    <p id="selectedRecordId">Click on a record to view details</p>
+                                </div>
+                            </div>
+                            <div class="record-details" id="recordDetails">
+                                <!-- Record details will be loaded here -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- PDF Preview -->
+                    <div class="card">
+                        <h2><i class="fas fa-file-pdf"></i> PDF Preview</h2>
+                        <div class="pdf-preview-container">
+                            <div class="pdf-info" id="pdfInfo">
+                                <i class="fas fa-file-pdf"></i>
+                                <div>
+                                    <h4>PDF Template Ready</h4>
+                                    <p id="pdfTemplateName">No PDF uploaded</p>
+                                </div>
+                            </div>
+                            
+                            <div class="pdf-actions">
+                                <button id="generatePdfBtn" class="btn btn-primary" disabled>
+                                    <i class="fas fa-magic"></i> Fill & Generate PDF
+                                </button>
+                                <button id="previewTemplateBtn" class="btn btn-secondary">
+                                    <i class="fas fa-eye"></i> Preview Template
+                                </button>
+                            </div>
+                            
+                            <div class="preview-note">
+                                <i class="fas fa-info-circle"></i>
+                                <p><strong>How it works:</strong> System will try to match Excel column names with PDF form fields. If no match found, data will be added as text overlay.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Download Section -->
+                <div class="download-section card" id="downloadSection" style="display: none;">
+                    <h2><i class="fas fa-check-circle success-icon"></i> PDF Generated Successfully!</h2>
+                    <div class="download-info">
+                        <div class="download-icon">
+                            <i class="fas fa-file-pdf"></i>
+                        </div>
+                        <div class="download-details">
+                            <p>Your filled PDF has been generated and is ready to download.</p>
+                            <p class="file-detail" id="generatedFileName"></p>
+                            <a id="downloadLink" class="btn btn-download">
+                                <i class="fas fa-file-download"></i> Download PDF
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Generated PDFs History -->
+            <div class="history-section">
+                <div class="card">
+                    <h2><i class="fas fa-history"></i> Generated PDFs</h2>
+                    <div class="table-container">
+                        <table id="pdfsTable">
+                            <thead>
+                                <tr>
+                                    <th>Filename</th>
+                                    <th>Generated Date</th>
+                                    <th>Size</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="pdfsBody">
+                                <tr>
+                                    <td colspan="4" class="empty-table">
+                                        <i class="fas fa-folder-open"></i>
+                                        <p>No PDFs generated yet</p>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="table-actions">
+                        <button id="refreshPdfsBtn" class="btn btn-secondary btn-small">
+                            <i class="fas fa-sync-alt"></i> Refresh List
+                        </button>
+                        <button id="clearAllBtn" class="btn btn-danger btn-small">
+                            <i class="fas fa-trash"></i> Clear All
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <footer class="footer">
+            <p>Smart PDF Filler System • v2.0 • © 2024</p>
+            <p class="status" id="statusIndicator">
+                <i class="fas fa-circle status-connected"></i> System Online
+            </p>
+        </footer>
+    </div>
+
+    <!-- Loading Modal -->
+    <div class="modal" id="loadingModal">
+        <div class="modal-content">
+            <div class="loader"></div>
+            <h3 id="loadingMessage">Processing...</h3>
+            <p id="loadingDetails"></p>
+        </div>
+    </div>
+
+    <!-- PDF Preview Modal -->
+    <div class="modal" id="pdfPreviewModal">
+        <div class="modal-content large-modal">
+            <div class="modal-header">
+                <h3>PDF Template Preview</h3>
+                <button class="close-btn" id="closePdfPreview">&times;</button>
+            </div>
+            <div class="modal-body">
+                <iframe id="pdfPreviewFrame" style="width: 100%; height: 600px; border: none;"></iframe>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
