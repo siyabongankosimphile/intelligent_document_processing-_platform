@@ -9,7 +9,8 @@ from werkzeug.utils import secure_filename
 import json
 import tempfile
 from excel_parser import ExcelParser
-from pdf_filler import PDFFiller
+from document_ai_engine import DocumentAIEngine
+
 
 app = Flask(__name__)
 CORS(app)
@@ -39,7 +40,8 @@ def allowed_pdf_file(filename):
 class ContractProcessor:
     def __init__(self):
         self.excel_parser = ExcelParser()
-        self.pdf_filler = PDFFiller()
+        self.pdf_filler = DocumentAIEngine()
+
     
     def process_excel_file(self, file_path):
         """Process Excel file and extract data for multiple records"""
