@@ -10,6 +10,7 @@ import json
 import tempfile
 from excel_parser import ExcelParser
 from document_ai_engine import DocumentAIEngine
+import fitz
 
 
 app = Flask(__name__)
@@ -322,32 +323,51 @@ def debug_excel_fields():
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
 
+ 
+
 @app.route('/api/debug-pdf-fields', methods=['POST'])
 def debug_pdf_fields():
-    """Debug endpoint to see what fields are in the PDF"""
+    """Debug endpoint to see what form fields are in the PDF"""
     try:
         if 'file' not in request.files:
             return jsonify({'success': False, 'error': 'No file'}), 400
-        
+
         file = request.files['file']
-        
+
         # Save temporarily
-        temp_path = os.path.join(app.config['UPLOAD_FOLDER'], f"debug_pdf_{uuid.uuid4().hex}.pdf")
+        temp_path = os.path.join(
+            app.config['UPLOAD_FOLDER'],
+            f"debug_pdf_{uuid.uuid4().hex}.pdf"
+        )
         file.save(temp_path)
-        
-        # Extract PDF fields
-        filler = PDFFiller()
-        fields = filler.extract_form_fields(temp_path)
-        
+
+        # Extract PDF form fields directly
+        pdf_document = fitz.open(temp_path)
+        fields = []
+
+        for page_num in range(len(pdf_document)):
+            page = pdf_document[page_num]
+            widgets = page.widgets()
+            if widgets:
+                for widget in widgets:
+                    if widget.field_name:
+                        fields.append({
+                            "name": widget.field_name,
+                            "type": widget.field_type if hasattr(widget, "field_type") else "unknown",
+                            "value": widget.field_value if hasattr(widget, "field_value") else ""
+                        })
+
+        pdf_document.close()
+
         # Clean up
         os.remove(temp_path)
-        
+
         return jsonify({
-            'success': True,
-            'fields': fields,
-            'count': len(fields)
+            "success": True,
+            "fields": fields,
+            "count": len(fields)
         })
-        
+
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
 
